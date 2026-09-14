@@ -1,6 +1,9 @@
 package com.project.main.payment_platform.user.service;
 
 import com.project.main.payment_platform.exception.EmailAlreadyExistsException;
+import com.project.main.payment_platform.exception.InvalidCredentialsException;
+import com.project.main.payment_platform.user.dto.LoginRequest;
+import com.project.main.payment_platform.user.dto.LoginResponse;
 import com.project.main.payment_platform.user.dto.RegisterUserRequest;
 import com.project.main.payment_platform.user.dto.UserResponse;
 import com.project.main.payment_platform.user.entity.Role;
@@ -50,6 +53,31 @@ public class UserServiceImpl implements UserService {
                 .role(savedUser.getRole())
                 .status(savedUser.getStatus())
                 .createdAt(savedUser.getCreatedAt())
+                .build();
+    }
+
+
+    @Override
+    public LoginResponse loginUser(LoginRequest request) {
+
+        String email = request.getEmail().trim().toLowerCase();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(InvalidCredentialsException::new);
+
+        if (!passwordEncoder.matches(
+                request.getPassword(),
+                user.getPasswordHash())) {
+
+            throw new InvalidCredentialsException();
+        }
+
+        return LoginResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .role(user.getRole())
                 .build();
     }
 }

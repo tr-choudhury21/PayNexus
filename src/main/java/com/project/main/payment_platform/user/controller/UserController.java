@@ -1,5 +1,7 @@
 package com.project.main.payment_platform.user.controller;
 
+import com.project.main.payment_platform.user.dto.LoginRequest;
+import com.project.main.payment_platform.user.dto.LoginResponse;
 import com.project.main.payment_platform.user.dto.RegisterUserRequest;
 import com.project.main.payment_platform.user.dto.UserResponse;
 import com.project.main.payment_platform.user.service.UserService;
@@ -29,5 +31,14 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> loginUser(
+            @Valid @RequestBody LoginRequest request) {
+
+        LoginResponse response = userService.loginUser(request);
+
+        return ResponseEntity.ok(response);
     }
 }
