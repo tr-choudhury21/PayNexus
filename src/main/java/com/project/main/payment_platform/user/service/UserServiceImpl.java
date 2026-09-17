@@ -2,6 +2,7 @@ package com.project.main.payment_platform.user.service;
 
 import com.project.main.payment_platform.exception.EmailAlreadyExistsException;
 import com.project.main.payment_platform.exception.InvalidCredentialsException;
+import com.project.main.payment_platform.security.JwtService;
 import com.project.main.payment_platform.user.dto.LoginRequest;
 import com.project.main.payment_platform.user.dto.LoginResponse;
 import com.project.main.payment_platform.user.dto.RegisterUserRequest;
@@ -22,6 +23,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     @Override
     public UserResponse registerUser(RegisterUserRequest request) {
@@ -72,12 +74,15 @@ public class UserServiceImpl implements UserService {
             throw new InvalidCredentialsException();
         }
 
+        String token = jwtService.generateToken(user);
+
         return LoginResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .role(user.getRole())
+                .token(token)
                 .build();
     }
 }
