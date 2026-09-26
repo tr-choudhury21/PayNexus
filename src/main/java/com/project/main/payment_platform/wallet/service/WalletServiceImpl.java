@@ -1,5 +1,9 @@
 package com.project.main.payment_platform.wallet.service;
 
+import com.project.main.payment_platform.exception.InsufficientBalanceException;
+import com.project.main.payment_platform.exception.WalletAlreadyExistsException;
+import com.project.main.payment_platform.exception.WalletNotActiveException;
+import com.project.main.payment_platform.exception.WalletNotFoundException;
 import com.project.main.payment_platform.user.entity.User;
 import com.project.main.payment_platform.user.repository.UserRepository;
 import com.project.main.payment_platform.wallet.entity.LedgerEntry;
@@ -32,9 +36,7 @@ public class WalletServiceImpl implements WalletService {
                 userId,
                 currency)) {
 
-            throw new IllegalStateException(
-                    "Wallet already exists for this currency"
-            );
+            throw new WalletAlreadyExistsException(currency);
         }
 
         User user = userRepository.findById(userId)
@@ -63,9 +65,7 @@ public class WalletServiceImpl implements WalletService {
         return walletRepository
                 .findByUserIdAndCurrency(userId, currency)
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Wallet not found"
-                        )
+                        new WalletNotFoundException(currency)
                 );
     }
 
@@ -120,9 +120,7 @@ public class WalletServiceImpl implements WalletService {
         validateWallet(wallet);
 
         if (wallet.getBalance().compareTo(amount) < 0) {
-            throw new IllegalStateException(
-                    "Insufficient wallet balance"
-            );
+            throw new InsufficientBalanceException(amount);
         }
 
         wallet.setBalance(
@@ -173,9 +171,7 @@ public class WalletServiceImpl implements WalletService {
     private void validateWallet(Wallet wallet) {
 
         if (wallet.getStatus() != WalletStatus.ACTIVE) {
-            throw new IllegalStateException(
-                    "Wallet is not active"
-            );
+            throw new WalletNotActiveException();
         }
     }
 }
