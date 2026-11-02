@@ -8,7 +8,12 @@ import com.project.main.payment_platform.wallet.dto.WalletResponse;
 import com.project.main.payment_platform.wallet.dto.WalletTransactionRequest;
 import com.project.main.payment_platform.wallet.entity.LedgerEntry;
 import com.project.main.payment_platform.wallet.entity.Wallet;
+import com.project.main.payment_platform.wallet.mapper.WalletResponseMapper;
 import com.project.main.payment_platform.wallet.service.WalletService;
+import com.project.main.payment_platform.idempotency.dto.IdempotencyResult;
+import com.project.main.payment_platform.idempotency.entity.IdempotencyOperation;
+import com.project.main.payment_platform.idempotency.service.IdempotencyService;
+import com.project.main.payment_platform.wallet.mapper.WalletResponseMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @RestController
@@ -25,6 +31,8 @@ public class WalletController {
 
     private final WalletService walletService;
     private final SecurityUtils securityUtils;
+    private final IdempotencyService idempotencyService;
+    private final WalletResponseMapper walletResponseMapper;
 
 
     @PostMapping
@@ -40,7 +48,7 @@ public class WalletController {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(toWalletResponse(wallet));
+                .body(walletResponseMapper.toResponse(wallet));
     }
 
     @GetMapping("/{currency}")
@@ -55,48 +63,53 @@ public class WalletController {
         );
 
         return ResponseEntity.ok(
-                toWalletResponse(wallet)
+                walletResponseMapper.toResponse(wallet)
         );
     }
 
     @PostMapping("/{currency}/credit")
     public ResponseEntity<WalletResponse> creditWallet(
             @PathVariable String currency,
+            @RequestHeader("Idempotency-Key") String idempotencyKey,
             @Valid @RequestBody WalletTransactionRequest request) {
 
         UUID userId = securityUtils.getCurrentUserId();
 
-        Wallet wallet = walletService.creditWallet(
-                userId,
-                currency.toUpperCase(),
-                request.getAmount(),
-                request.getDescription(),
-                request.getReferenceId()
-        );
+        IdempotencyResult result =
+                idempotencyService.executeWalletTransaction(
+                        userId,
+                        idempotencyKey,
+                        currency.toUpperCase(Locale.ROOT),
+                        IdempotencyOperation.CREDIT,
+                        request
+                );
 
-        return ResponseEntity.ok(
-                toWalletResponse(wallet)
-        );
+
+        return ResponseEntity
+                .status(result.status())
+                .body(result.body());
     }
 
     @PostMapping("/{currency}/debit")
     public ResponseEntity<WalletResponse> debitWallet(
             @PathVariable String currency,
+            @RequestHeader("Idempotency-Key") String idempotencyKey,
             @Valid @RequestBody WalletTransactionRequest request) {
 
         UUID userId = securityUtils.getCurrentUserId();
 
-        Wallet wallet = walletService.debitWallet(
-                userId,
-                currency.toUpperCase(),
-                request.getAmount(),
-                request.getDescription(),
-                request.getReferenceId()
-        );
+        IdempotencyResult result =
+                idempotencyService.executeWalletTransaction(
+                        userId,
+                        idempotencyKey,
+                        currency.toUpperCase(Locale.ROOT),
+                        IdempotencyOperation.DEBIT,
+                        request
+                );
 
-        return ResponseEntity.ok(
-                toWalletResponse(wallet)
-        );
+        return ResponseEntity
+                .status(result.status())
+                .body(result.body());
     }
 
     @GetMapping("/{currency}/ledger")
