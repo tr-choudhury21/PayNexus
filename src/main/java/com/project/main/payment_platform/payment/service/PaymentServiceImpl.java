@@ -1,10 +1,7 @@
 package com.project.main.payment_platform.payment.service;
 
 
-import com.project.main.payment_platform.exception.InvalidCustomerException;
-import com.project.main.payment_platform.exception.InvalidMerchantException;
-import com.project.main.payment_platform.exception.MerchantNotFoundException;
-import com.project.main.payment_platform.exception.UserNotFoundException;
+import com.project.main.payment_platform.exception.*;
 import com.project.main.payment_platform.payment.dto.CreatePaymentRequest;
 import com.project.main.payment_platform.payment.dto.PaymentResponse;
 import com.project.main.payment_platform.payment.entity.Payment;
@@ -59,7 +56,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         if (merchant.getStatus() != UserStatus.ACTIVE) {
-            throw new InvalidMerchantException();
+            throw new InactiveMerchantException();
         }
 
         // 5. Create payment entity
