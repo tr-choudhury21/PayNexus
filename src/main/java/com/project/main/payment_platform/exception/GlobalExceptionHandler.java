@@ -139,4 +139,25 @@ public class GlobalExceptionHandler {
 
         return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
+
+    @ExceptionHandler(PaymentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handlePaymentNotFound(
+            PaymentNotFoundException ex) {
+
+        return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(PaymentOwnershipException.class)
+    public ResponseEntity<ErrorResponse> handlePaymentOwnership(
+            PaymentOwnershipException ex) {
+
+        return buildErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidPaymentStatusException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidPaymentStatus(
+            InvalidPaymentStatusException ex) {
+
+        return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage());
+    }
 }

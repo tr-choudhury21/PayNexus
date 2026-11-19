@@ -28,4 +28,6 @@ public interface PaymentAttemptRepository extends JpaRepository<PaymentAttempt, 
             String gatewayName,
             String gatewayReference
     );
+
+    long countByPayment_Id(UUID paymentId);
 }
